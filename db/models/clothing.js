@@ -14,7 +14,7 @@ async function createClothing({clothing, description, size, color, price, invent
 async function getClothing() {
     try {
         const { rows: clothing } = await client.query(`
-            SELECT id, newClothing, description, size, color, price FROM clothing
+            SELECT id, clothing, description, size, color, price, inventory FROM clothing
             `);
         
             return clothing;
