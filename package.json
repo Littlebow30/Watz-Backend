@@ -4,7 +4,8 @@
   "description": "api",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "seed": "node db/seed.js"
   },
   "author": "",
   "license": "ISC",

@@ -34,6 +34,19 @@ async function getUser({username, password}) {
     }
   }
 
+  async function getUsers() {
+    try {
+        const { rows: users } = await client.query(`
+            SELECT id, firstName, LastName, username, password FROM users
+            `);
+        
+            return users;
+        
+    } catch(error) {
+        throw error;
+    }
+}
+
   async function getUserById(userId) {
     // first get the user
     try {
@@ -77,5 +90,6 @@ async function getUserByUsername(userName) {
     getUser,
     getUserById,
     getUserByUsername,
+    getUsers,
   }
   
