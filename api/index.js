@@ -6,7 +6,7 @@ const router = express.Router();
 
 const { requireAuth } = require('../middleware/auth');
 const { createUser, getUser, getUsers } = require('../db/models/users');
-const { getCheckout, createCheckout } = require('../db/models/checkout');
+const { getCheckout, createCheckout, inventoryCheck, updateInventory } = require('../db/models/checkout');
 const { JsonWebTokenError } = require('jsonwebtoken');
 const { getClothing } = require('../db/models/clothing');
 
@@ -90,9 +90,22 @@ router.post('/checkout', async (req, res, next) => {
     const data = req.body;
     console.log(data)
 
-
+    
     try {
-        const checkout = await createCheckout(data.userId, data.clothesId, data.quantity)
+        const newInventoryNumber = await inventoryCheck(data.clothesId, data.quantity);
+    
+        if (newInventoryNumber === false) {
+            next({
+                name:"inventory error",
+                message: "Not enough inventory"
+            }) 
+        }
+        
+
+        await updateInventory(data.clothesId, newInventoryNumber)
+        
+
+        const checkout = await createCheckout(data.userId, data.clothesId, data.quantity);
         console.log(checkout);
         if (checkout === undefined) {
             throw new Error();
