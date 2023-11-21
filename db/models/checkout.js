@@ -27,11 +27,42 @@ async function getCheckout() {
 }
 // after checkout, drop inventory number in clothing data base based on clothing bought
 
-async function inventoryCheck() {}
+async function inventoryCheck(id, quantity) {
+    try {
+        const { rows: checkInventory } = await client.query(`
+            SELECT id, inventory from clothing where id = $1 
+            `,[id]);
+
+            if(checkInventory.length === 0) {
+                return false;
+            }
+            
+            if (checkInventory[0].inventory >= quantity) {
+                return checkInventory[0].inventory - quantity;
+            }                
+
+            return false
+    } catch(error) {
+        throw err;
+    }
+
+}
+
+async function updateInventory(clothingId, inventoryNumber) {
+    try {
+        const { row: inventoryUpdate } = await client.query(`
+        update clothing set inventory = $1 where id = $2`,[inventoryNumber, clothingId]);
+
+    } catch(err) {
+        throw err;
+    }
+
+}
 
 
 module.exports = {
     createCheckout,
     inventoryCheck,
-    getCheckout
+    getCheckout, 
+    updateInventory
 }
