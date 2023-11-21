@@ -7,6 +7,9 @@ const { PORT = 8080 } = process.env;
 const client = require('./db/client');
 client.connect();
 
+const cors = require('cors');
+server.use(cors());
+
 server.use(express.json());
 server.use(express.urlencoded({extended: true}));
 
