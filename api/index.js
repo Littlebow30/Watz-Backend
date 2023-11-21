@@ -5,11 +5,12 @@ const router = express.Router();
 
 
 const { requireAuth } = require('../middleware/auth');
-const { createUser, getUser } = require('../db/models/users');
+const { createUser, getUser, getUsers } = require('../db/models/users');
+const { getCheckout, createCheckout, inventoryCheck, updateInventory } = require('../db/models/checkout');
 const { JsonWebTokenError } = require('jsonwebtoken');
 const { getClothing } = require('../db/models/clothing');
 
-router.get('/', async (req, res, next) => {
+router.get('/', async (req, res) => {
     res.json({ status: 'working' })
   });
 
@@ -26,9 +27,22 @@ router.get('/clothes', async (req, res) => {
     }
 })
 
+router.get('/users', async (req, res) => {
+
+    const users = req.body;
+
+    try{
+        const allUsers = await getUsers();
+        res.json(allUsers);
+        
+    }catch(err) {
+        throw err;
+    }
+})
 
 
-router.post('/user', async (req, res, next) => {
+
+router.post('/users', async (req, res, next) => {
     // get all the classes from my database
     
     const data = req.body;
@@ -60,10 +74,64 @@ router.post('/user', async (req, res, next) => {
 })
 
 
+router.get('/checkout', async (req, res) => {
+
+    try{
+        const checkout = await getCheckout();
+        res.json(checkout);
+        
+    }catch(err) {
+        throw err;
+    }
+})
+
+router.post('/checkout', async (req, res, next) => {
+    
+    const data = req.body;
+    console.log(data)
+
+    
+    try {
+        const newInventoryNumber = await inventoryCheck(data.clothesId, data.quantity);
+    
+        if (newInventoryNumber === false) {
+            next({
+                name:"inventory error",
+                message: "Not enough inventory"
+            }) 
+        }
+        
+
+        await updateInventory(data.clothesId, newInventoryNumber)
+        
+
+        const checkout = await createCheckout(data.userId, data.clothesId, data.quantity);
+        console.log(checkout);
+        if (checkout === undefined) {
+            throw new Error();
+        }
+        res.json(checkout);
+                
+    } catch (err) {
+        console.log(err)
+        next({
+            name: 'CreatingCheckoutError',
+            message: 'There was an error with your checkout. Please try agaian.',
+        })
+       
+    }
+
+    const checkoutList = await getCheckout(data);
+    if (checkoutList == undefined){
+        res.status(401).send();
+        return 
+    }
+})
+
    
 
     
-    // create JWT 
+
 
     
 

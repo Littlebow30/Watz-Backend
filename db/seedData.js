@@ -10,9 +10,11 @@ async function dropTables() {
         DROP TABLE IF EXISTS checkout;
         DROP TABLE IF EXISTS clothing;
         DROP TABLE IF EXISTS users;`)
+        
     } catch (error) {
         throw error;
     }
+
 }
 
 async function createTables() {
@@ -46,10 +48,11 @@ async function createTables() {
             CREATE TABLE checkout(
                 id SERIAL PRIMARY KEY,
                 userId INTEGER references users(id),
-                clothing INTEGER references clothing(id),
-                quanity INTEGER
+                clothesId INTEGER references clothing(id),
+                quantity INTEGER
             );
             `)
+            
     }
     catch (error) {
         console.log('error with creating table')
