@@ -1,10 +1,10 @@
 const client = require('../client');
 
-async function createClothing({clothing, description, size, color, price, inventory}) {
+async function createClothing({clothing, description, size, color, price, inventory, img}) {
     try {
         const { rows: [articleOfClothing] } = await client.query(`
-        INSERT INTO clothing(clothing, description, size, color, price, inventory) VALUES ($1, $2, $3, $4, $5, $6)
-        RETURNING id, clothing, description, size, color, price, inventory`, [clothing, description, size, color, price, inventory]);
+        INSERT INTO clothing(clothing, description, size, color, price, inventory, img) VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING id, clothing, description, size, color, price, inventory, img`, [clothing, description, size, color, price, inventory, img]);
         return articleOfClothing;
     } catch(error) {
         throw error;
@@ -14,7 +14,7 @@ async function createClothing({clothing, description, size, color, price, invent
 async function getClothing() {
     try {
         const { rows: clothing } = await client.query(`
-            SELECT id, clothing, description, size, color, price, inventory FROM clothing
+            SELECT id, clothing, description, size, color, price, inventory, img FROM clothing
             `);
         
             return clothing;
