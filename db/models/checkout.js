@@ -1,3 +1,4 @@
+const { checkout } = require('../../api');
 const client = require('../client');
 
 // Put id, clothing, size, price, quantity also would like total
@@ -26,7 +27,8 @@ async function getCheckout() {
     }
 }
 // after checkout, drop inventory number in clothing data base based on clothing bought
-
+delete checkout
+editChecking
 async function inventoryCheck(id, quantity) {
     try {
         const { rows: checkInventory } = await client.query(`

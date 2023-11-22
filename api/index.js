@@ -128,6 +128,39 @@ router.post('/checkout', async (req, res, next) => {
     }
 })
 
+router.delete('/clothing,:id',  async (req, res, next) => {
+    try{
+        
+    }catch(error){
+        throw error;
+    }
+} )
+
+router.update('/clothing,:id',  async (req, res, next) => {
+    try{
+        
+
+    }catch(error){
+        throw error;
+    }
+} )
+
+router.delete('/users,:id',  async (req, res, next) => {
+    try{
+       
+
+    }catch(error){
+        throw error;
+    }
+} )
+
+router.update('/users,:id',  async (req, res, next) => {
+    try{
+        
+    }catch(error){
+        throw error;
+    }
+} )
    
 
     

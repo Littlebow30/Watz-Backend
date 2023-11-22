@@ -85,11 +85,31 @@ async function getUserByUsername(userName) {
       console.error(error)
     }
   }
+
+  async function deleteUsers(id) {
+    try {
+        
+        
+    } catch(error) {
+        throw error;
+    }
+}
+
+async function updateUsers(id) {
+  try {
+     
+      
+  } catch(error) {
+      throw error;
+  }
+}
   module.exports = {
     createUser,
     getUser,
     getUserById,
     getUserByUsername,
     getUsers,
+    deleteUsers,
+    updateUsers
   }
   

@@ -24,8 +24,32 @@ async function getClothing() {
     }
 }
 
+async function deleteClothing(id) {
+    try {
+        const { rows: clothingId } = await client.query();
+        
+            return clothingId;
+        
+    } catch(error) {
+        throw error;
+    }
+}
+
+async function updateClothing() {
+    try {
+        const { rows: clothing } = await client.query()
+            
+            return clothing;
+        
+    } catch(error) {
+        throw error;
+    }
+}
+
 
 module.exports = {
     createClothing,
-    getClothing
+    getClothing,
+    updateClothing,
+    deleteClothing
 }

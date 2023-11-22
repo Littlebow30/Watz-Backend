@@ -27,7 +27,8 @@ async function createTables() {
                 firstName VARCHAR(200),
                 lastName VARCHAR (200),
                 username VARCHAR(200) UNIQUE NOT NULL,
-                password VARCHAR(200) NOT NULL
+                password VARCHAR(200) NOT NULL,
+                cart STRING
             );
             `)
 
