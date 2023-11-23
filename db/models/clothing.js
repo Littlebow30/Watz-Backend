@@ -24,8 +24,31 @@ async function getClothing() {
     }
 }
 
+async function deleteClothing(id) {
+    try {
+        const {rows} = await client.query(`
+        DELETE from users WHERE id = $1`, [id])
+        
+    } catch(error) {
+        throw error;
+    }
+}
+
+async function updateClothing() {
+    try {
+        const { rows: clothing } = await client.query()
+            
+            return clothing;
+        
+    } catch(error) {
+        throw error;
+    }
+}
+
 
 module.exports = {
     createClothing,
-    getClothing
+    getClothing,
+    updateClothing,
+    deleteClothing
 }

@@ -1,3 +1,4 @@
+const { checkout } = require('../../api');
 const client = require('../client');
 
 // Put id, clothing, size, price, quantity also would like total

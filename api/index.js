@@ -5,7 +5,7 @@ const router = express.Router();
 
 
 const { requireAuth } = require('../middleware/auth');
-const { createUser, getUser, getUsers } = require('../db/models/users');
+const { createUser, getUser, getUsers, deleteUsers, updateUsers } = require('../db/models/users');
 const { getCheckout, createCheckout, inventoryCheck, updateInventory } = require('../db/models/checkout');
 const { JsonWebTokenError } = require('jsonwebtoken');
 const { getClothing } = require('../db/models/clothing');
@@ -128,6 +128,48 @@ router.post('/checkout', async (req, res, next) => {
     }
 })
 
+router.delete('/checkout/:id',  async (req, res, next) => {
+    try{
+        const {rows} = await client.query(`
+        DELETE from users WHERE id = $1`, [id])
+        
+    }catch(error){
+        throw error;
+    }
+} )
+
+router.patch('/checkout/:id',  async (req, res, next) => {
+    try{
+        
+
+    }catch(error){
+        throw error;
+    }
+} )
+
+router.delete('/users/:id',  async (req, res, next) => {
+    try{
+        const id = req.params.id
+        const userDelete = await deleteUsers(id)
+       
+       res.json({status: 'succesful'})
+
+    }catch(error){
+        throw error;
+    }
+} )
+
+router.patch('/users/:id',  async (req, res, next) => {
+    try{
+        const id = req.params.id
+        const userUpdate = await updateUsers(id, userObj)
+
+        res.json(userUpdate)
+        
+    }catch(error){
+        throw error;
+    }
+} )
    
 
     
