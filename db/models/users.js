@@ -86,20 +86,35 @@ async function getUserByUsername(userName) {
     }
   }
 
-  async function deleteUsers(id) {
+async function deleteUsers(id) {
     try {
-        
+      const {rows} = await client.query(`
+      DELETE from users WHERE id = $1`, [id])
+
         
     } catch(error) {
         throw error;
     }
 }
 
-async function updateUsers(id) {
+async function updateUsers(id, userObj) {
   try {
-     
-      
-  } catch(error) {
+    const {rows} = await client.query(sqlString, params)
+      let sql = [];
+      const params = [];
+    
+      Object.keys(userObj).forEach(key => {
+        const value = userObj[key];
+        sql.push(`${key} = $${params.length + 1}`);
+        params.push(value);
+      });
+    
+      const sqlString = 'UPDATE users set ' + sql.join(' AND ') + ` where id = ${id}`;
+    
+      return [sqlString, params];
+    
+
+    }catch(error) {
       throw error;
   }
 }

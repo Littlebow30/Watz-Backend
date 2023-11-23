@@ -26,9 +26,8 @@ async function getClothing() {
 
 async function deleteClothing(id) {
     try {
-        const { rows: clothingId } = await client.query();
-        
-            return clothingId;
+        const {rows} = await client.query(`
+        DELETE from users WHERE id = $1`, [id])
         
     } catch(error) {
         throw error;
