@@ -1,183 +1,117 @@
-const jwt = require('jsonwebtoken')
 require('dotenv').config();
 const express = require('express');
+const { getClothing } = require('../db/models/clothing');
+const adminRouter = require("./admin")
+const authRouter = require("./auth")
+const { requireAuth } = require("../middleware/auth")
+
+const client = require('../db/client');
+
+
 const router = express.Router();
 
-
-const { requireAuth } = require('../middleware/auth');
-const { createUser, getUser, getUsers, deleteUsers, updateUsers } = require('../db/models/users');
-const { getCheckout, createCheckout, inventoryCheck, updateInventory } = require('../db/models/checkout');
-const { JsonWebTokenError } = require('jsonwebtoken');
-const { getClothing } = require('../db/models/clothing');
-
-router.get('/', async (req, res) => {
-    res.json({ status: 'working' })
-  });
+router.use("/admin", adminRouter)
+router.use("/auth", authRouter)
 
 
-router.get('/clothes', async (req, res) => {
-
-    const clothing = req.body;
-
-    try{
+router.get('/clothes/', async (req, res) => {
+    try {
         const clothes = await getClothing();
         res.json(clothes);
-    }catch(err) {
-        throw err;
-    }
-})
-
-router.get('/users', async (req, res) => {
-
-    const users = req.body;
-
-    try{
-        const allUsers = await getUsers();
-        res.json(allUsers);
-        
-    }catch(err) {
-        throw err;
-    }
-})
-
-
-
-router.post('/users', async (req, res, next) => {
-    // get all the classes from my database
-    
-    const data = req.body;
-    console.log(data)
-
-    try {
-        const user = await createUser(data)
-        
-        if (user === undefined) {
-            throw new Error();
-        }
-        const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET)
-        res.json({ accessToken: accessToken});
-                
     } catch (err) {
-        console.log(err)
-        next({
-            name: 'CreatingUserError',
-            message: 'There was an error creating a user. Please try agaian',
-        })
-       
-    }
-
-    const user = await getUser(data);
-    if (user == undefined){
-        res.status(401).send();
-        return 
-    }
-})
-
-
-router.get('/checkout', async (req, res) => {
-
-    try{
-        const checkout = await getCheckout();
-        res.json(checkout);
-        
-    }catch(err) {
         throw err;
     }
 })
 
-router.post('/checkout', async (req, res, next) => {
-    
-    const data = req.body;
-    console.log(data)
 
-    
+router.get('/clothes/:id', async (req, res) => {
     try {
-        const newInventoryNumber = await inventoryCheck(data.clothesId, data.quantity);
-    
-        if (newInventoryNumber === false) {
-            next({
-                name:"inventory error",
-                message: "Not enough inventory"
-            }) 
+        const { id } = req.params;
+
+        const result = await client.query('SELECT * FROM clothing WHERE id = $1', [id]);
+        const product = result.rows[0];
+
+        res.json(product);
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: error.message });
+    }
+});
+
+router.post('/checkout', requireAuth, async (req, res) => {
+    try {
+        const items = req.body;
+        const user = req.user;
+
+        if (!items || !Array.isArray(items) || items.length === 0) {
+            return res.status(400).json({ message: 'Invalid or empty items array in the request body' });
         }
-        
 
-        await updateInventory(data.clothesId, newInventoryNumber)
-        
-
-        const checkout = await createCheckout(data.userId, data.clothesId, data.quantity);
-        console.log(checkout);
-        if (checkout === undefined) {
-            throw new Error();
+        const cart = {
+            purchases: [],
+            userId: user.id
         }
-        res.json(checkout);
-                
-    } catch (err) {
-        console.log(err)
-        next({
-            name: 'CreatingCheckoutError',
-            message: 'There was an error with your checkout. Please try agaian.',
-        })
-       
+
+        for (const item of items) {
+            const result = await client.query('SELECT * FROM clothing WHERE id = $1', [item.id]);
+            const product = result.rows[0];
+
+            if (!product) {
+                return res.status(404).json({ message: `Product with ID ${item.id} not found` });
+            }
+
+            // Add the purchase details to the cart
+            cart.purchases.push({
+                productId: item.id,
+                quantity: item.quantity,
+            });
+        }
+
+        // Save the cart to the database
+        const cartResult = await client.query('INSERT INTO orders (userId, status) VALUES ($1, $2) RETURNING *', [cart.userId, 'Pending']);
+        const orderId = cartResult.rows[0].id;
+
+        for (const purchase of cart.purchases) {
+            await client.query('INSERT INTO order_items (orderId, clothingId, quantity) VALUES ($1, $2, $3)', [orderId, purchase.productId, purchase.quantity]);
+        }
+
+        res.status(200).json({ message: 'Purchase successful!' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: error.message });
     }
+});
 
-    const checkoutList = await getCheckout(data);
-    if (checkoutList == undefined){
-        res.status(401).send();
-        return 
+router.get('/checkout-history', requireAuth, async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        // Fetch orders for the user
+        const ordersResult = await client.query('SELECT * FROM orders WHERE userId = $1', [userId]);
+        const purchaseHistory = ordersResult.rows;
+
+        // For each order, fetch associated order items with clothing details
+        for (const order of purchaseHistory) {
+            const orderItemsResult = await client.query(`
+                SELECT order_items.id, order_items.quantity, clothing.clothing AS name, clothing.size, clothing.color, clothing.price
+                FROM order_items
+                JOIN clothing ON order_items.clothingId = clothing.id
+                WHERE order_items.orderId = $1
+            `, [order.id]);
+
+            // Assign the order items to the purchases property of the order
+            order.purchases = orderItemsResult.rows;
+        }
+
+        res.json(purchaseHistory);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: error.message });
     }
-})
-
-router.delete('/checkout/:id',  async (req, res, next) => {
-    try{
-        const {rows} = await client.query(`
-        DELETE from users WHERE id = $1`, [id])
-        
-    }catch(error){
-        throw error;
-    }
-} )
-
-router.patch('/checkout/:id',  async (req, res, next) => {
-    try{
-        
-
-    }catch(error){
-        throw error;
-    }
-} )
-
-router.delete('/users/:id',  async (req, res, next) => {
-    try{
-        const id = req.params.id
-        const userDelete = await deleteUsers(id)
-       
-       res.json({status: 'succesful'})
-
-    }catch(error){
-        throw error;
-    }
-} )
-
-router.patch('/users/:id',  async (req, res, next) => {
-    try{
-        const id = req.params.id
-        const userUpdate = await updateUsers(id, userObj)
-
-        res.json(userUpdate)
-        
-    }catch(error){
-        throw error;
-    }
-} )
-   
-
-    
+});
 
 
-    
 
-
-    
 
 module.exports = router

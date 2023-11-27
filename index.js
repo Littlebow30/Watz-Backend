@@ -1,33 +1,43 @@
 require('dotenv').config();
-const express = require('express');
-const server = express();
 
+const express = require('express');
+const cors = require('cors');
 const { PORT = 8080 } = process.env;
 
+const apiRouter = require('./api');
 const client = require('./db/client');
-client.connect();
 
-const cors = require('cors');
+const server = express();
+
+// Middleware
 server.use(cors());
-
 server.use(express.json());
-server.use(express.urlencoded({extended: true}));
+server.use(express.urlencoded({ extended: true }));
 
-server.use('/api', require('./api'));
+// Serve static pictures
+server.use("/pictures", express.static("pictures"));
 
-server.use ("/pictures",express.static("pictures"));
+// API Routes
+server.use('/api', apiRouter);
 
+// 404 Route
 server.get('*', (req, res) => {
-    res.status(404).send({error: '404 - Not Found', message: 'No route found for the requested URL'});
-  });
+  res.status(404).send({ error: '404 - Not Found', message: 'No route found for the requested URL' });
+});
 
+// Error Handling Middleware
 server.use((error, req, res, next) => {
-    console.error('SERVER ERROR: ', error);
-    if(res.statusCode < 400) res.status(500);
-    res.send({error: error.message, name: error.name, message: error.message, table: error.table});
-  });
+  console.error('SERVER ERROR: ', error);
+  res.status(error.statusCode || 500).json({ error: error.message || 'Internal Server Error' });
+});
 
-server.listen(
-    PORT,
-    () => console.log(`its on: ${PORT}`)
-)
+// Start server
+client.connect()
+  .then(() => {
+    server.listen(PORT, () => {
+      console.log(`Server Started on port: ${PORT}`);
+    });
+  })
+  .catch((error) => {
+    console.error('Error connecting to the database:', error);
+  });

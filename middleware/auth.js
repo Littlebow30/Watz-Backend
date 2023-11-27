@@ -24,13 +24,13 @@ async function requireAuth(req, res, next) {
         const parsedToken = jwt.verify(token, process.env.JWT_SECRET);
 
         // Set the user from the JWT
-        const id = parsedToken && parsedToken.id;
+        const id = parsedToken && parsedToken.userId;
 
         if(id) {
             // get the user by the id we were provided
-            req.user = await getUserById(id);
-            next();
+            req.user = await getUserById(parsedToken.userId);
         }
+        next();
     } catch(err) {
         next(err);
     }

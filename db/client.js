@@ -1,6 +1,8 @@
 const { Client } = require('pg');
 
-const connectionString = process.env.DATABASE_URL || 'https://localhost:5432/clothing';
+require('dotenv').config();
+
+const connectionString = process.env.DATABASE_URL;
 
 const client = new Client({
   connectionString,

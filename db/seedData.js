@@ -2,64 +2,70 @@ const client = require('./client');
 const { createUser, getUser } = require('./models/users');
 const { createClothing } = require('./models/clothing');
 
-
 async function dropTables() {
-
     try {
         await client.query(`
-        DROP TABLE IF EXISTS checkout;
-        DROP TABLE IF EXISTS clothing;
-        DROP TABLE IF EXISTS users;`)
-        
+            drop table if exists checkout;
+            DROP TABLE IF EXISTS order_items;
+            DROP TABLE IF EXISTS orders;
+            DROP TABLE IF EXISTS clothing;
+            DROP TABLE IF EXISTS users;
+        `);
     } catch (error) {
         throw error;
     }
-
 }
 
 async function createTables() {
     try {
-        console.log('starting to build tables...')
+        console.log('Starting to build tables...');
 
         await client.query(`
-            CREATE TABLE users(
+            CREATE TABLE users (
                 id SERIAL PRIMARY KEY,
                 firstName VARCHAR(200),
                 lastName VARCHAR (200),
                 username VARCHAR(200) UNIQUE NOT NULL,
-                password VARCHAR(200) NOT NULL,
-                cart STRING
+                password VARCHAR(200) NOT NULL
             );
-            `)
+        `);
 
         await client.query(`
-        CREATE TABLE clothing(
-            id SERIAL PRIMARY KEY,
-            clothing VARCHAR(300),
-            description TEXT,
-            size VARCHAR(20),
-            color VARCHAR(20),
-            price DECIMAL(5,2),
-            inventory INTEGER,
-            img VARCHAR(200)
-        );
-            `)
-
-        await client.query(`
-            CREATE TABLE checkout(
+            CREATE TABLE clothing (
                 id SERIAL PRIMARY KEY,
-                userId INTEGER references users(id),
-                clothesId INTEGER references clothing(id),
+                clothing VARCHAR(300),
+                description TEXT,
+                size VARCHAR(20),
+                color VARCHAR(20),
+                price DECIMAL(5,2),
+                inventory INTEGER,
+                img VARCHAR(200)
+            );
+        `);
+
+        await client.query(`
+            CREATE TABLE orders (
+                id SERIAL PRIMARY KEY,
+                userId INTEGER REFERENCES users(id),
+                orderDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                status VARCHAR(50) DEFAULT 'Pending'
+            );
+        `);
+
+        await client.query(`
+            CREATE TABLE order_items (
+                id SERIAL PRIMARY KEY,
+                orderId INTEGER REFERENCES orders(id),
+                clothingId INTEGER REFERENCES clothing(id),
                 quantity INTEGER
             );
-            `)
-            
-    }
-    catch (error) {
-        console.log('error with creating table')
-        console.log(error)
-    }
+        `);
 
+        console.log('Tables created successfully.');
+    } catch (error) {
+        console.log('Error with creating tables');
+        console.error(error);
+    }
 }
 
 async function createInitialUsers() {
@@ -72,6 +78,7 @@ async function createInitialUsers() {
             {username: 'dixonut', password: 'dixonut123', firstName: 'dixon', lastName: 'johnson'},
             {username: 'quinn-jensen', password: 'quinn-jensen123', firstName: 'quinn', lastName: 'jensen'},
         ]
+        
 
         const users = await Promise.all(usersToCreate.map(createUser));
         console.log(users);
