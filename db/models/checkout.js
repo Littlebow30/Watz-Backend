@@ -1,13 +1,12 @@
-const { checkout } = require('../../api');
 const client = require('../client');
 
-// Put id, clothing, size, price, quantity also would like total
-async function createCheckout(userId, clothesId, quanity) {
+// Put id, product, size, price, quantity also would like total
+async function createCheckout(userId, productsId, quantity) {
     try {
-        const { rows: clothing } = await client.query(`
-        INSERT INTO checkout(userId, clothesId, quantity) VALUES($1, $2, $3)
-        RETURNING *; `, [userId, clothesId, quanity]);
-        return clothing;       
+        const { rows: product } = await client.query(`
+        INSERT INTO checkout(userId, productsId, quantity) VALUES($1, $2, $3)
+        RETURNING *; `, [userId, productsId, quantity]);
+        return product;       
         
     } catch(error) {
         throw error;
@@ -17,7 +16,7 @@ async function createCheckout(userId, clothesId, quanity) {
 async function getCheckout() {
     try {
         const { rows: checkout } = await client.query(`
-            SELECT id, userId, clothesId, quantity FROM checkout
+            SELECT id, userId, productsId, quantity FROM checkout
             `);
         
             return checkout;
@@ -26,12 +25,12 @@ async function getCheckout() {
         throw error;
     }
 }
-// after checkout, drop inventory number in clothing data base based on clothing bought
+// after checkout, drop inventory number in product data base based on product bought
 
 async function inventoryCheck(id, quantity) {
     try {
         const { rows: checkInventory } = await client.query(`
-            SELECT id, inventory from clothing where id = $1 
+            SELECT id, inventory from product where id = $1 
             `,[id]);
 
             if(checkInventory.length === 0) {
@@ -49,10 +48,10 @@ async function inventoryCheck(id, quantity) {
 
 }
 
-async function updateInventory(clothingId, inventoryNumber) {
+async function updateInventory(productId, inventoryNumber) {
     try {
         const { row: inventoryUpdate } = await client.query(`
-        update clothing set inventory = $1 where id = $2`,[inventoryNumber, clothingId]);
+        update product set inventory = $1 where id = $2`,[inventoryNumber, productId]);
 
     } catch(err) {
         throw err;
